@@ -26,8 +26,8 @@ class ServiceApiMixin(object):
             'TaskTemplate': task_template,
             'Mode': mode,
             'UpdateConfig': update_config,
-            'Networks': networks,
-            'Endpoint': endpoint_config
+            'Networks': utils.convert_service_networks(networks),
+            'EndpointSpec': endpoint_config
         }
         return self._result(
             self._post_json(url, data=data, headers=headers), True

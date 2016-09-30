@@ -170,6 +170,31 @@ class ServiceTest(helpers.BaseTestCase):
         assert 'RestartPolicy' in svc_info['Spec']['TaskTemplate']
         assert policy == svc_info['Spec']['TaskTemplate']['RestartPolicy']
 
+    def test_service_with_custom_networks(self):
+        net1 = self.client.create_network(
+            'dockerpytest_1', driver='overlay', ipam={'Driver': 'default'}
+        )
+        self.tmp_networks.append(net1['Id'])
+        net2 = self.client.create_network(
+            'dockerpytest_2', driver='overlay', ipam={'Driver': 'default'}
+        )
+        self.tmp_networks.append(net2['Id'])
+        container_spec = docker.types.ContainerSpec('busybox', ['true'])
+        task_tmpl = docker.types.TaskTemplate(container_spec)
+        name = self.get_service_name()
+        svc_id = self.client.create_service(
+            task_tmpl, name=name, networks=['dockerpytest_1', 'dockerpytest_2']
+        )
+        svc_info = self.client.inspect_service(svc_id)
+        assert 'Networks' in svc_info['Spec']
+        assert svc_info['Spec']['Networks'] == [
+            {'Target': net1['Id']}, {'Target': net2['Id']}
+        ]
+
+    # def test_create_service_with_endpoint_spec(self):
+    #     container_spec = docker.types.ContainerSpec('busybox', ['true'])
+    #     task_tmpl = docker.types.TaskTemplate(container_spec)
+
     def test_update_service_name(self):
         name, svc_id = self.create_simple_service()
         svc_info = self.client.inspect_service(svc_id)

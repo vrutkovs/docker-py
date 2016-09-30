@@ -12,7 +12,7 @@ class TaskTemplate(dict):
         if restart_policy:
             self['RestartPolicy'] = restart_policy
         if placement:
-            self['Placement'] = placement
+            self['Placement'] = convert_placement(placement)
         if log_driver:
             self['LogDriver'] = log_driver
 
@@ -179,3 +179,17 @@ class DriverConfig(dict):
         self['Name'] = name
         if options:
             self['Options'] = options
+
+
+def convert_placement(placement):
+    if not placement:
+        return placement
+    if not isinstance(placement, list):
+        raise TypeError('placement parameter must be a list.')
+
+    result = []
+    for constr in placement:
+        if isinstance(constr, six.string_types):
+            constr = {'Constraint': constr}
+        result.append(constr)
+    return result
